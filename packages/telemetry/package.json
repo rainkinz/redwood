@@ -8,7 +8,7 @@
   "types": "./dist/index.d.ts",
   "license": "MIT",
   "dependencies": {
-    "@babel/runtime-corejs3": "7.16.7",
+    "@babel/runtime-corejs3": "7.16.8",
     "@redwoodjs/internal": "0.42.0",
     "@types/envinfo": "7.8.1",
     "envinfo": "7.8.1"
@@ -19,7 +19,7 @@
     "directory": "packages/telemetry"
   },
   "devDependencies": {
-    "@babel/cli": "7.16.7",
+    "@babel/cli": "7.16.8",
     "jest": "27.4.7"
   },
   "jest": {
