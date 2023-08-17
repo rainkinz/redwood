@@ -14,30 +14,31 @@ import { withApiProxy } from './withApiProxy'
 
 interface Opts {
   socket?: string
-  port?: string
+  port: number
   apiHost?: string
+  apiUrl: string
 }
 
-export async function serve() {
+function parseOptions(): Opts {
   // Parse server file args
   const args = yargsParser(process.argv.slice(2), {
     string: ['port', 'socket', 'apiHost'],
     alias: { apiHost: ['api-host'], port: ['p'] },
   })
 
+  const redwoodConfig = getConfig()
+
+  const port = args.port ? parseInt(args.port) : redwoodConfig.web.port
+  const apiUrl = redwoodConfig.web.apiUrl
+
   const options: Opts = {
     socket: args.socket,
-    port: args.port,
+    port: port,
     apiHost: args.apiHost,
+    apiUrl: apiUrl
   }
 
   const redwoodProjectPaths = getPaths()
-  const redwoodConfig = getConfig()
-
-  const port = options.port ? parseInt(options.port) : redwoodConfig.web.port
-  const apiUrl = redwoodConfig.web.apiUrl
-
-  const tsServer = Date.now()
 
   // Load .env files
   config({
@@ -45,6 +46,13 @@ export async function serve() {
     defaults: path.join(redwoodProjectPaths.base, '.env.defaults'),
     multiline: true,
   })
+
+  return options
+}
+
+export async function serve() {
+  const tsServer = Date.now()
+  const options = parseOptions()
 
   console.log(chalk.italic.dim('Starting Web Server...'))
 
@@ -71,7 +79,7 @@ export async function serve() {
   // If apiHost is supplied, it means the functions are running elsewhere, so we should just proxy requests.
   if (options.apiHost) {
     // Attach plugin for proxying
-    fastify.register(withApiProxy, { apiHost: options.apiHost, apiUrl })
+    fastify.register(withApiProxy, { apiHost: options.apiHost, apiUrl: options.apiUrl })
   }
 
   let listenOptions:
@@ -82,7 +90,7 @@ export async function serve() {
     listenOptions = { path: options.socket }
   } else {
     listenOptions = {
-      port,
+      port: options.port,
       host: process.env.NODE_ENV === 'production' ? '0.0.0.0' : '::',
     }
   }
